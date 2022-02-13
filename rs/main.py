@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, json
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy import sparse
@@ -132,7 +132,7 @@ class CF(object):
         self.Ybar = sparse.coo_matrix((self.Ybar_data[:, 2],
                                        (self.Ybar_data[:, 1], self.Ybar_data[:, 0])), (self.n_items, self.n_users))
 
-        print(self.Ybar.toarray())
+        # print(self.Ybar.toarray())
         #  (16, 10)      1
         #   (14, 10)      0
         #   (18, 10)      -1
@@ -162,14 +162,14 @@ class CF(object):
 
         # Chuyển đổi ma trận này sang định dạng Hàng thưa được nén
         self.Ybar = self.Ybar.tocsr()
-        print(self.Ybar.T)
-        print("YBAR.T")
-        print(self.Ybar.T)
+        # print(self.Ybar.T)
+        # print("YBAR.T")
+        # print(self.Ybar.T)
 
     def similarity(self):
         eps = 1e-6
         self.S = self.dist_func(self.Ybar.T, self.Ybar.T)
-        print(self.S)
+        # print(self.S)
 
     def refresh(self):
         """
@@ -199,23 +199,23 @@ class CF(object):
 
         # Step 2:
         users_rated_i = (self.Y_data[ids, 0]).astype(np.int32)
-        print("Ádasd")
-        print(users_rated_i)
+        # print("Ádasd")
+        # print(users_rated_i)
 
         # Step 3: find similarity btw the current user and others
         # who already rated i
         sim = self.S[u, users_rated_i]
         # Step 4: find the k most similarity users
         a = np.argsort(sim)[-self.k:]
-        print("SIMMMMMMMM")
-        print(sim)
-        print(a)
+        # print("SIMMMMMMMM")
+        # print(sim)
+        # print(a)
         # [1. 0. 0.]
         # [1 2 0]
         # [0. 0. 1.]
         # and the corresponding similarity levels
         nearest_s = sim[a]
-        print(nearest_s)
+        # print(nearest_s)
         # How did each of 'near' users rated item i
         r = self.Ybar[i, users_rated_i[a]]
         if normalized:
@@ -244,8 +244,8 @@ class CF(object):
         # print(self.Y_data)
         ids = np.where(self.Y_data[:, 0] == u)[0]
         # vi tri phan tu thoa dieu kien trong self.Y_data
-        print("ids")
-        print(np.where(self.Y_data[:, 0] == u))
+        # print("ids")
+        # print(np.where(self.Y_data[:, 0] == u))
         # [0 1 2]
 
         items_rated_by_u = self.Y_data[ids, 1].tolist()
@@ -289,33 +289,50 @@ def test_connect():
 
 @app.route('/rs', methods=['GET'])
 def RS():
+    data_base = json.loads(request.args.get('data'))
+    user_rs = int(request.args.get('user'))
+    print(data_base)
+    print(user_rs)
     # data_base = Review.objects.values_list('customer_id', 'product_id', 'star')
-    data_base = [[10, 16,  4],
-                 [10, 14,  3],
-                 [10, 18,  1],
-                 [8, 18,  1],
-                 [8, 16, 3],
-                 [8,  5, 4],
-                 [8, 12, 4],
-                 [8, 8, 4],
-                 [8,  1,  3],
-                 [4,  8, 5],
-                 [4, 5,  3],
-                 [4,  1, 2],
-                 [4, 14,  4],
-                 [8, 10,  5],
-                 [5, 10,  3],
-                 [5, 18,  4],
-                 [5,  5,  5],
-                 [5,  1,  4],
-                 [5, 12,  3],
-                 [6,  8, 5],
-                 [6, 14,  4],
-                 [6, 1,  2],
-                 [6, 16, 4],
-                 [6, 18, 1],
-                 [6, 12,  5],
-                 [6, 5, 5]]
+    # data_base = [[ 9, 1, 5 ], 
+    # [ 2, 1, 4 ], 
+    # [ 2, 5, 5 ],
+    # [4,  8, 5],
+    # [4, 5,  3],
+    # [4,  1, 2],
+    # [4, 14,  4],
+    # [8, 10,  5],
+    # [5, 10,  3],
+    # [5, 18,  4],
+    # [5,  5,  5],
+    # [5,  1,  4],
+    # [5, 12,  3],]
+    # data_base = [[10, 16,  4],
+    #              [10, 14,  3],
+    #              [10, 18,  1],
+    #              [8, 18,  1],
+    #              [8, 16, 3],
+    #              [8,  5, 4],
+    #              [8, 12, 4],
+    #              [8, 8, 4],
+    #              [8,  1,  3],
+    #              [4,  8, 5],
+    #              [4, 5,  3],
+    #              [4,  1, 2],
+    #              [4, 14,  4],
+    #              [8, 10,  5],
+    #              [5, 10,  3],
+    #              [5, 18,  4],
+    #              [5,  5,  5],
+    #              [5,  1,  4],
+    #              [5, 12,  3],
+    #              [6,  8, 5],
+    #              [6, 14,  4],
+    #              [6, 1,  2],
+    #              [6, 16, 4],
+    #              [6, 18, 1],
+    #              [6, 12,  5],
+    #              [6, 5, 5]]
     rate_train = np.array(data_base)
     rate_test = np.array(data_base)
     # print(rate_test)
@@ -334,7 +351,7 @@ def RS():
         SE += (pred - rate_test[n, 2]) ** 2
     RMSE = np.sqrt(SE / n_tests)
     # print(f'User-user CF, RMSE = {RMSE}')
-    response = jsonify({'data': rs.print_recommendation(10)})
+    response = jsonify({'data': rs.print_recommendation(user_rs)})
     response.status_code = 200
     return response
     # return rs.print_recommendation(10)
